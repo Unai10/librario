@@ -15,7 +15,12 @@ async function registerSW() {
     const reg = await navigator.serviceWorker.register('./sw.js', { scope: './' });
     console.log('[App] Service Worker registrado:', reg.scope);
 
-    // Escuchar actualizaciones
+    // 1. Si ya hay un worker esperando ser activado, mostrar el banner
+    if (reg.waiting) {
+      showUpdateBanner();
+    }
+
+    // 2. Escuchar futuras actualizaciones
     reg.addEventListener('updatefound', () => {
       const newSW = reg.installing;
       newSW?.addEventListener('statechange', () => {
