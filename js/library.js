@@ -217,7 +217,19 @@ export class LibraryView {
     // Event listeners en tarjetas
     grid.querySelectorAll('.book-card:not(.skeleton)').forEach(card => {
       card.addEventListener('click', e => {
-        if (e.target.closest('.book-card__delete') || e.target.closest('.book-card__download')) return;
+        const isDelete = e.target.closest('.book-card__delete');
+        const isDownload = e.target.closest('.book-card__download');
+        if (isDelete || isDownload) return;
+
+        // Si es táctil y no está activo, activamos las opciones en el primer toque
+        const isTouch = window.matchMedia("(pointer: coarse)").matches;
+        if (isTouch && !card.classList.contains('mobile-active')) {
+          grid.querySelectorAll('.book-card.mobile-active').forEach(c => c.classList.remove('mobile-active'));
+          card.classList.add('mobile-active');
+          e.stopPropagation(); // Evitar que el global click lo cierre inmediatamente
+          return;
+        }
+
         this.#onBookOpen(card.dataset.id);
       });
       card.querySelector('.book-card__delete')?.addEventListener('click', e => {
@@ -331,6 +343,9 @@ export class LibraryView {
   #onGlobalClick = () => {
     const sortDrop = this.#container.querySelector('#sortDropdown');
     sortDrop?.classList.add('hidden');
+
+    // Quitar estado activo de las tarjetas en móvil al tocar fuera
+    this.#container.querySelectorAll('.book-card.mobile-active').forEach(c => c.classList.remove('mobile-active'));
   };
 
   // ── Carga de libros ──────────────────────────────────────────────────────

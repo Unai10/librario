@@ -598,20 +598,65 @@ body {
   position: relative;
 }
 
-/* Zonas de navegación invisibles */
+/* Botones de navegación lateral con símbolos */
 .reader-nav-zone {
   position: absolute;
   top: 0; bottom: 0;
-  width: 80px;
+  width: 60px;
   z-index: 5;
   cursor: pointer;
   background: transparent;
   transition: background var(--t-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent; /* Quitar sombreado gris en Android/iOS */
+}
+.reader-nav-zone::after {
+  content: '';
+  font-family: var(--font-ui);
+  font-size: 1.8rem;
+  font-weight: 300;
+  color: var(--rt-text, var(--c-text));
+  opacity: 0.15;
+  transition: opacity var(--t-fast), transform var(--t-fast);
 }
 .reader-nav-zone--prev { left: 0; }
+.reader-nav-zone--prev::after { content: '‹'; }
 .reader-nav-zone--next { right: 0; }
-.reader-nav-zone:hover { background: rgba(0,0,0,0.02); }
-.theme-dark .reader-nav-zone:hover { background: rgba(255,255,255,0.02); }
+.reader-nav-zone--next::after { content: '›'; }
+
+.reader-nav-zone:active::after { transform: scale(0.9); opacity: 0.4; }
+
+@media (hover: hover) {
+  .reader-nav-zone:hover::after { opacity: 0.4; }
+  .reader-nav-zone:hover { background: rgba(0,0,0,0.02); }
+  .theme-dark .reader-nav-zone:hover { background: rgba(255,255,255,0.02); }
+}
+
+/* Fix Editor Header en móvil */
+.editor-header__left {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  overflow: hidden;
+  flex: 1;
+  min-width: 0; /* Evitar que el título empuje los botones */
+}
+#backToReaderBtn { flex-shrink: 0; } /* Asegurar que la flecha no se encoja */
+
+/* Interacción de tarjetas en móvil (sin hover) */
+.book-card.mobile-active .book-card__overlay,
+.book-card.mobile-active .book-card__delete,
+.book-card.mobile-active .book-card__download {
+  opacity: 1;
+}
+.book-card.mobile-active {
+  border-color: var(--c-gold-dim);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
 
 /* Visor epub.js */
 .epub-viewer {
