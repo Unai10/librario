@@ -635,16 +635,71 @@ body {
   .theme-dark .reader-nav-zone:hover { background: rgba(255,255,255,0.02); }
 }
 
+.btn-icon svg {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
 /* Fix Editor Header en móvil */
+.editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--header-h);
+  padding: 0 var(--sp-3);
+  background: var(--c-surface);
+  border-bottom: 1px solid var(--c-border);
+  gap: var(--sp-2);
+}
+
 .editor-header__left {
   display: flex;
   align-items: center;
-  gap: var(--sp-3);
-  overflow: hidden;
+  gap: var(--sp-2);
+  min-width: 0;
   flex: 1;
-  min-width: 0; /* Evitar que el título empuje los botones */
 }
-#backToReaderBtn { flex-shrink: 0; } /* Asegurar que la flecha no se encoja */
+
+#backToReaderBtn {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--c-text);
+}
+
+.editor-header__book {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.editor-book-title {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--c-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.editor-header__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  flex-shrink: 0;
+}
+
+/* Reajuste del botón de vista previa para móviles */
+@media (max-width: 500px) {
+  #previewBtn span { display: none; }
+  #previewBtn { padding: var(--sp-2); width: 36px; height: 36px; justify-content: center; }
+  #previewBtn svg { margin: 0; }
+}
 
 /* Interacción de tarjetas en móvil (sin hover) */
 .book-card.mobile-active .book-card__overlay,
