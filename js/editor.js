@@ -293,7 +293,7 @@ export class EditorView {
         // Si el edit guardado es solo un fragmento, lo integramos en el original
         if (!finalContent.includes('<body') && !finalContent.includes('<html')) {
           const original = await file.async('string');
-          finalContent = original.replace(/(<body[^>]*>)([\s\S]*?)(<\/body>)/i, `$1${finalContent}$3`);
+          finalContent = original.replace(/(<body[^>]*>)([\s\S]*?)(<\/body>)/i, (m, p1, p2, p3) => `${p1}${content}${p3}`);
         }
         this.#zip.file(file.name, finalContent);
       }
@@ -372,6 +372,10 @@ export class EditorView {
     const isSource = !source.classList.contains('hidden');
 
     let editedBody = isSource ? source.value : wysiwyg.innerHTML;
+
+    // Sanitizar HTML para que sea XHTML válido (especialmente etiquetas autoconclusivas como <hr> -> <hr />)
+    editedBody = this.#sanitizeXhtml(editedBody);
+
     let updatedFull = editedBody;
 
     // Actualizar zip en memoria y preparar el contenido completo
@@ -399,6 +403,9 @@ export class EditorView {
       content:     updatedFull,
       editedAt:    Date.now(),
     });
+
+    if (isSource) source.value = editedBody;
+    else wysiwyg.innerHTML = editedBody;
 
     this.#originalContent = editedBody;
     this.#isDirty = false;
@@ -483,9 +490,9 @@ export class EditorView {
       : (wysiwyg.innerHTML.split(find).length - 1);
 
     if (isSource) {
-      source.value = source.value.replaceAll(find, replace);
+      source.value = source.value.replaceAll(find, () => replace);
     } else {
-      wysiwyg.innerHTML = wysiwyg.innerHTML.replaceAll(find, replace);
+      wysiwyg.innerHTML = wysiwyg.innerHTML.replaceAll(find, () => replace);
     }
 
     this.#markDirty();
@@ -644,21 +651,47 @@ export class EditorView {
 
   #replaceBody(original, newBody) {
     const hasBody = /<body[^>]*>[\s\S]*?<\/body>/i.test(original);
-    if (hasBody) return original.replace(/(<body[^>]*>)([\s\S]*?)(<\/body>)/i, `$1${newBody}$3`);
+    // Usamos función de reemplazo para evitar que caracteres como $ en newBody se interpreten
+    if (hasBody) return original.replace(/(<body[^>]*>)([\s\S]*?)(<\/body>)/i, (m, p1, p2, p3) => `${p1}${newBody}${p3}`);
     return newBody;
+  }
+
+  #sanitizeXhtml(html) {
+    // Asegurar que etiquetas vacías comunes sean autoconclusivas para evitar errores XML en ePub
+    const tags = ['hr', 'br', 'img', 'meta', 'link', 'input', 'col', 'source', 'area', 'base'];
+    let sanitized = html;
+    
+    tags.forEach(tag => {
+      // Busca <tag ...> que NO termina en /> y le añade la barra
+      const regex = new RegExp(`<(${tag})(\\b[^>]*?)(?<!/)>`, 'gi');
+      sanitized = sanitized.replace(regex, '<$1$2 />');
+    });
+    
+    return sanitized;
   }
 
   #prettyPrintHtml(html) {
     // Indentación básica del HTML
     let indent = 0;
+    const selfClosing = /^(?:area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)$/i;
+
     return html
       .replace(/>\s*</g, '>\n<')
       .split('\n')
       .map(line => {
-        line = line.trim();
-        if (/^<\//.test(line)) indent = Math.max(0, indent - 1);
-        const out = '  '.repeat(indent) + line;
-        if (/^<[^\/!]/.test(line) && !/\/>$/.test(line) && !/<\//.test(line)) indent++;
+        const trimmed = line.trim();
+        if (!trimmed) return '';
+
+        const isClosing = /^<\//.test(trimmed);
+        const isOpening = /^<[^\/!]/.test(trimmed);
+        const isSelfClosing = /\/>$/.test(trimmed) || selfClosing.test(trimmed.match(/^<([a-z0-9]+)/i)?.[1] || '');
+
+        if (isClosing) indent = Math.max(0, indent - 1);
+        
+        const out = '  '.repeat(indent) + trimmed;
+
+        if (isOpening && !isClosing && !isSelfClosing) indent++;
+        
         return out;
       })
       .join('\n');
