@@ -682,16 +682,30 @@ export class EditorView {
         const trimmed = line.trim();
         if (!trimmed) return '';
 
-        const isClosing = /^<\//.test(trimmed);
-        const isOpening = /^<[^\/!]/.test(trimmed);
-        const isSelfClosing = /\/>$/.test(trimmed) || selfClosing.test(trimmed.match(/^<([a-z0-9]+)/i)?.[1] || '');
+        // Contar aperturas y cierres en la misma línea para evitar cascadas
+        const openingMatches = (trimmed.match(/<[^\/!][^>]*[^\/]>/g) || []).filter(tag => {
+          const tagName = tag.match(/^<([a-z0-9]+)/i)?.[1];
+          return tagName && !selfClosing.test(tagName);
+        }).length;
+        
+        const closingMatches = (trimmed.match(/<\/[^>]+>/g) || []).length;
+        const startsWithClosing = /^<\//.test(trimmed);
 
-        if (isClosing) indent = Math.max(0, indent - 1);
+        if (startsWithClosing) {
+          indent = Math.max(0, indent - 1);
+        }
         
         const out = '  '.repeat(indent) + trimmed;
 
-        if (isOpening && !isClosing && !isSelfClosing) indent++;
+        // Ajustar indent para la siguiente línea
+        if (!startsWithClosing) {
+          indent += (openingMatches - closingMatches);
+        } else {
+          // Si empezaba cerrando, ya restamos 1, pero si hay más cierres/aperturas...
+          indent += (openingMatches - (closingMatches - 1));
+        }
         
+        indent = Math.max(0, indent);
         return out;
       })
       .join('\n');

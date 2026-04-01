@@ -1100,6 +1100,7 @@ body {
 }
 .editor-wysiwyg p   { margin-bottom: 0.8em; }
 .editor-wysiwyg a   { color: var(--c-gold); }
+.editor-wysiwyg hr  { border: none; height: 1em; margin: 0; }
 
 /* Source editor */
 .editor-source {
@@ -1186,6 +1187,7 @@ body {
   line-height: 1.8;
   color: var(--c-text);
 }
+.preview-content hr { border: none; height: 1em; margin: 0; }
 
 /* ═══════════════════════════════════════════════════════════════════
    RESPONSIVE — Tablet
