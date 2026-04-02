@@ -22,6 +22,13 @@ const FONTS = [
   { id: 'sans',      label: 'Sans-serif',   css: "'Lato', sans-serif" },
 ];
 
+const ALIGNMENTS = [
+  { id: 'original', label: 'Original' },
+  { id: 'justify',  label: 'Justificado' },
+  { id: 'left',     label: 'Izquierda' },
+  { id: 'right',    label: 'Derecha' },
+];
+
 // ─── ReaderView ────────────────────────────────────────────────────────────
 
 export class ReaderView {
@@ -33,7 +40,7 @@ export class ReaderView {
   #rendition;     // epub.js Rendition
   #bookData;      // record de IndexedDB
   #toc = [];
-  #settings = { fontSize: 18, fontId: 'georgia', theme: 'dark', lineHeight: 1.7 };
+  #settings = { fontSize: 18, fontId: 'georgia', theme: 'dark', lineHeight: 1.7, textAlign: 'original' };
   #saveTimer = null;
   #currentCfi = null;
   #currentChapterHref = null;
@@ -209,6 +216,16 @@ export class ReaderView {
           </section>
 
           <section class="settings-section">
+            <label class="settings-label">Alineación de texto</label>
+            <div class="align-ctrl" id="alignSelector">
+              ${ALIGNMENTS.map(a => `
+                <button class="align-btn ${a.id === this.#settings.textAlign ? 'active' : ''}"
+                        data-align="${a.id}">${a.label}</button>
+              `).join('')}
+            </div>
+          </section>
+
+          <section class="settings-section">
             <label class="settings-label">Interlineado</label>
             <div class="line-height-ctrl">
               ${[1.4, 1.7, 2.0, 2.3].map(v => `
@@ -359,7 +376,7 @@ export class ReaderView {
     const theme = THEMES[this.#settings.theme];
     const font  = FONTS.find(f => f.id === this.#settings.fontId) || FONTS[0];
 
-    this.#rendition.themes.default({
+    const styles = {
       body: {
         'background-color': `${theme.bg} !important`,
         'color':            `${theme.fg} !important`,
@@ -371,8 +388,21 @@ export class ReaderView {
         'padding':          '2rem 2rem 8rem !important',
       },
       'a': { 'color': `${theme.link} !important` },
-      'p': { 'margin-bottom': '0.9em !important' },
-    });
+      'p': { 
+        'margin-bottom': '0.9em !important',
+        'line-height':   'inherit !important'
+      },
+    };
+
+    // Aplicar alineación explícitamente a body y p para mayor especificidad
+    const alignValue = this.#settings.textAlign === 'original' 
+      ? 'initial' 
+      : this.#settings.textAlign;
+
+    styles.body['text-align'] = `${alignValue} !important`;
+    styles['p']['text-align']  = `${alignValue} !important`;
+
+    this.#rendition.themes.default(styles);
 
     // Actualizar tema del root
     const root = this.#container.querySelector('#readerRoot');
@@ -531,6 +561,11 @@ export class ReaderView {
       btn.addEventListener('click', () => this.#changeLineHeight(parseFloat(btn.dataset.lh)));
     });
 
+    // Alignment
+    q('#alignSelector')?.querySelectorAll('.align-btn').forEach(btn => {
+      btn.addEventListener('click', () => this.#changeTextAlign(btn.dataset.align));
+    });
+
     // Teclado
     document.addEventListener('keydown', this.#handleKey);
   }
@@ -585,6 +620,15 @@ export class ReaderView {
     this.#settings.lineHeight = lh;
     this.#container.querySelectorAll('.lh-btn').forEach(b => {
       b.classList.toggle('active', parseFloat(b.dataset.lh) === lh);
+    });
+    this.#applyTheme();
+    this.#saveSettings();
+  }
+
+  #changeTextAlign(align) {
+    this.#settings.textAlign = align;
+    this.#container.querySelectorAll('.align-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.align === align);
     });
     this.#applyTheme();
     this.#saveSettings();

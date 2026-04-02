@@ -102,8 +102,14 @@ export class LibraryView {
 
   async #loadSettings() {
     const saved = await db.get(STORES.SETTINGS, 'readerSettings');
-    if (saved?.value?.theme) this.#sortBy = this.#sortBy; // No related, just to check if exists
+    this.#sortBy = saved?.value?.sortBy || 'addedAt';
     this.#theme = saved?.value?.theme || 'dark';
+  }
+
+  async #saveSettings() {
+    const saved = await db.get(STORES.SETTINGS, 'readerSettings');
+    const newValue = { ...(saved?.value || {}), theme: this.#theme, sortBy: this.#sortBy };
+    await db.put(STORES.SETTINGS, { key: 'readerSettings', value: newValue });
   }
 
   #applyTheme() {
@@ -145,9 +151,9 @@ export class LibraryView {
 
             <!-- Dropdown de ordenación -->
             <div class="sort-dropdown hidden" id="sortDropdown">
-              <button data-sort="addedAt">Más recientes</button>
-              <button data-sort="title">Título A–Z</button>
-              <button data-sort="lastRead">Última lectura</button>
+              <button data-sort="addedAt" class="${this.#sortBy === 'addedAt' ? 'active' : ''}">Más recientes</button>
+              <button data-sort="title" class="${this.#sortBy === 'title' ? 'active' : ''}">Título A–Z</button>
+              <button data-sort="lastRead" class="${this.#sortBy === 'lastRead' ? 'active' : ''}">Última lectura</button>
             </div>
           </div>
         </header>
@@ -331,8 +337,14 @@ export class LibraryView {
     sortDrop?.querySelectorAll('button').forEach(btn => {
       btn.addEventListener('click', () => {
         this.#sortBy = btn.dataset.sort;
+        
+        // Actualizar UI del dropdown
+        sortDrop.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
         this.#sortBooks();
         this.#renderBooks();
+        this.#saveSettings();
         sortDrop.classList.add('hidden');
       });
     });
