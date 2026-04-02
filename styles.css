@@ -1235,9 +1235,20 @@ body {
     padding-bottom: env(safe-area-inset-bottom);
     height: calc(var(--footer-h) + env(safe-area-inset-bottom));
   }
-  .lib-header {
+  .lib-header, .reader-header, .editor-header, .preview-panel__header, .update-banner {
     padding-top: env(safe-area-inset-top);
     height: calc(var(--header-h) + env(safe-area-inset-top));
+  }
+  .update-banner {
+    height: auto;
+    min-height: calc(var(--header-h) + env(safe-area-inset-top));
+  }
+  /* Ajuste para paneles laterales si es necesario */
+  .toc-panel__header, .settings-panel__header {
+    padding-top: calc(var(--sp-4) + env(safe-area-inset-top));
+  }
+  .books-grid, .toc-list, .settings-panel {
+    padding-bottom: env(safe-area-inset-bottom);
   }
 }
 
