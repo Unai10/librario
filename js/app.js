@@ -11,9 +11,17 @@ import { EditorView   } from './editor.js';
 
 async function registerSW() {
   if (!('serviceWorker' in navigator)) return;
+
+  // 1. Escuchar cambios de controlador (cuando un nuevo SW toma el mando)
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (refreshing) return;
+    refreshing = true;
+    window.location.reload();
+  });
+
   try {
     const reg = await navigator.serviceWorker.register('./sw.js', { scope: './' });
-    console.log('[App] Service Worker registrado:', reg.scope);
 
     // Comprobar actualización al cargar y cada vez que la pestaña gane foco
     const checkUpdate = () => {
@@ -24,29 +32,19 @@ async function registerSW() {
       if (document.visibilityState === 'visible') checkUpdate();
     });
 
-    // 1. Si ya hay un worker esperando ser activado, mostrar el banner
+    // Si ya hay un worker esperando
     if (reg.waiting) {
       showUpdateBanner(reg.waiting);
     }
 
-    // 2. Escuchar futuras actualizaciones
+    // Escuchar futuras actualizaciones
     reg.addEventListener('updatefound', () => {
       const newSW = reg.installing;
       newSW?.addEventListener('statechange', () => {
-        // Solo mostrar cuando el worker termine de instalarse (pase a 'installed')
         if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
           showUpdateBanner(newSW);
         }
       });
-    });
-
-    // 3. Recargar automáticamente cuando el nuevo Service Worker tome el control
-    let refreshing = false;
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (!refreshing) {
-        refreshing = true;
-        window.location.reload();
-      }
     });
 
   } catch (err) {
@@ -55,32 +53,19 @@ async function registerSW() {
 }
 
 function showUpdateBanner(worker) {
-  // Evitar duplicados
   if (document.querySelector('.update-banner')) return;
 
   const banner = document.createElement('div');
   banner.className = 'update-banner';
   banner.innerHTML = `
-    <span>Hay una nueva versión de Librario disponible</span>
-    <button id="reloadBtn">Actualizar ahora</button>
+    <span>Actualización disponible</span>
+    <button id="reloadBtn">Actualizar</button>
   `;
   document.body.appendChild(banner);
 
-  banner.querySelector('#reloadBtn')?.addEventListener('click', () => {
-    // Deshabilitar botón y mostrar estado
-    const btn = banner.querySelector('#reloadBtn');
-    if (btn) {
-      btn.disabled = true;
-      btn.textContent = 'Actualizando...';
-    }
-
-    // Mandar señal al worker esperando
+  banner.querySelector('#reloadBtn').addEventListener('click', () => {
+    banner.remove();
     worker.postMessage({ type: 'SKIP_WAITING' });
-    
-    // Eliminar el banner inmediatamente para dar feedback visual
-    setTimeout(() => {
-      if (banner.parentNode) banner.remove();
-    }, 200);
   });
 }
 
