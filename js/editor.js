@@ -446,15 +446,28 @@ export class EditorView {
 
     if (!source.classList.contains('hidden')) {
       const start = source.selectionEnd;
-      const idx   = source.value.indexOf(term, start);
+      let idx = source.value.indexOf(term, start);
+      
+      if (idx === -1 && start > 0) {
+        idx = source.value.indexOf(term, 0);
+        if (idx !== -1) {
+          this.#showStatus('Búsqueda reiniciada desde el principio', 'info');
+        }
+      }
+
       if (idx === -1) {
-        this.#showStatus('No se encontraron más coincidencias', 'info');
+        this.#showStatus('No se encontraron coincidencias', 'info');
         return;
       }
       source.setSelectionRange(idx, idx + term.length);
       source.focus();
     } else {
-      window.find(term);
+      const found = window.find(term, false, false, true);
+      if (found) {
+        wysiwyg.focus();
+      } else {
+        this.#showStatus('No se encontraron coincidencias', 'info');
+      }
     }
   }
 
