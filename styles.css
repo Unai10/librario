@@ -336,10 +336,12 @@ body {
 .books-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-auto-rows: min-content;
   gap: var(--sp-5);
   padding: var(--sp-5) var(--sp-6) var(--sp-8);
   overflow-y: auto;
   flex: 1;
+  min-height: 0;
   align-content: start;
   -webkit-overflow-scrolling: touch;
 }
@@ -347,6 +349,9 @@ body {
 /* Tarjeta de libro */
 .book-card {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   cursor: pointer;
   border-radius: var(--r-md);
   overflow: hidden;
@@ -363,6 +368,7 @@ body {
   aspect-ratio: 2 / 3;
   overflow: hidden;
   background: var(--c-surface-2);
+  flex-shrink: 0;
 }
 
 .book-card__cover-img {
@@ -411,6 +417,9 @@ body {
 
 .book-card__info {
   padding: var(--sp-3) var(--sp-3) var(--sp-4);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .book-card__title {
@@ -419,6 +428,7 @@ body {
   font-weight: 500;
   color: var(--c-text);
   line-height: 1.3;
+  height: calc(1.3em * 2);
   margin-bottom: var(--sp-1);
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -439,7 +449,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: var(--sp-2);
+  margin-top: auto;
 }
 
 .book-card__date { font-size: 0.67rem; color: var(--c-text-faint); }
@@ -1215,6 +1225,7 @@ body {
 @media (min-width: 600px) {
   .books-grid {
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    grid-auto-rows: min-content;
     padding: var(--sp-6) var(--sp-8) var(--sp-8);
     gap: var(--sp-6);
   }
@@ -1225,6 +1236,7 @@ body {
 @media (min-width: 900px) {
   .books-grid {
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    grid-auto-rows: min-content;
     padding: var(--sp-6) var(--sp-8) var(--sp-8);
     gap: var(--sp-6);
   }
@@ -1237,6 +1249,7 @@ body {
 @media (max-width: 400px) {
   .books-grid {
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    grid-auto-rows: min-content;
     gap: var(--sp-3);
     padding: var(--sp-4);
   }
