@@ -187,6 +187,9 @@ El editor soporta cualquier archivo HTML dentro del ePub. Para `.txt`:
   los recursos CDN en el primer uso; posteriores visitas son offline-first.
 
 ---
+## imagenes
+<img width="1911" height="916" alt="image" src="https://github.com/user-attachments/assets/37fbfa05-12bd-4e6f-9b3a-36bbf9a62399" />
+
 
 ## 📄 Licencia
 MIT — libre para uso personal y comercial.
