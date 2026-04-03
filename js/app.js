@@ -15,36 +15,60 @@ async function registerSW() {
     const reg = await navigator.serviceWorker.register('./sw.js', { scope: './' });
     console.log('[App] Service Worker registrado:', reg.scope);
 
+    // Comprobar actualización al cargar y cada vez que la pestaña gane foco
+    const checkUpdate = () => {
+      reg.update().catch(err => console.warn('[App] Error actualizando SW:', err));
+    };
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') checkUpdate();
+    });
+
     // 1. Si ya hay un worker esperando ser activado, mostrar el banner
     if (reg.waiting) {
-      showUpdateBanner();
+      showUpdateBanner(reg.waiting);
     }
 
     // 2. Escuchar futuras actualizaciones
     reg.addEventListener('updatefound', () => {
       const newSW = reg.installing;
       newSW?.addEventListener('statechange', () => {
+        // Solo mostrar cuando el worker termine de instalarse (pase a 'installed')
         if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
-          showUpdateBanner();
+          showUpdateBanner(newSW);
         }
       });
     });
+
+    // 3. Recargar automáticamente cuando el nuevo Service Worker tome el control
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!refreshing) {
+        refreshing = true;
+        window.location.reload();
+      }
+    });
+
   } catch (err) {
     console.warn('[App] Error registrando SW:', err);
   }
 }
 
-function showUpdateBanner() {
+function showUpdateBanner(worker) {
+  // Evitar duplicados
+  if (document.querySelector('.update-banner')) return;
+
   const banner = document.createElement('div');
   banner.className = 'update-banner';
   banner.innerHTML = `
-    <span>Nueva versión disponible</span>
-    <button id="reloadBtn">Actualizar</button>
+    <span>Hay una nueva versión de Librario disponible</span>
+    <button id="reloadBtn">Actualizar ahora</button>
   `;
   document.body.appendChild(banner);
+
   banner.querySelector('#reloadBtn')?.addEventListener('click', () => {
-    navigator.serviceWorker.controller?.postMessage({ type: 'SKIP_WAITING' });
-    window.location.reload();
+    // Mandar señal al worker esperando para que tome el control
+    worker.postMessage({ type: 'SKIP_WAITING' });
   });
 }
 
