@@ -3,7 +3,7 @@
  * Estrategia: Cache-first para assets estáticos, Network-first para recursos externos
  */
 
-const CACHE_VERSION = 'v1.1.0';
+const CACHE_VERSION = 'v1.1.1';
 const CACHE_STATIC = `librario-static-${CACHE_VERSION}`;
 const CACHE_CDN    = `librario-cdn-${CACHE_VERSION}`;
 

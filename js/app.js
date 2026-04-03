@@ -67,8 +67,20 @@ function showUpdateBanner(worker) {
   document.body.appendChild(banner);
 
   banner.querySelector('#reloadBtn')?.addEventListener('click', () => {
-    // Mandar señal al worker esperando para que tome el control
+    // Deshabilitar botón y mostrar estado
+    const btn = banner.querySelector('#reloadBtn');
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Actualizando...';
+    }
+
+    // Mandar señal al worker esperando
     worker.postMessage({ type: 'SKIP_WAITING' });
+    
+    // Eliminar el banner inmediatamente para dar feedback visual
+    setTimeout(() => {
+      if (banner.parentNode) banner.remove();
+    }, 200);
   });
 }
 
