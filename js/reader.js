@@ -388,9 +388,12 @@ export class ReaderView {
         'padding':          '2rem 2rem 8rem !important',
       },
       'a': { 'color': `${theme.link} !important` },
-      'p': { 
-        'margin-bottom': '0.9em !important',
+      'p, div, span, li, h1, h2, h3, h4, h5, h6': { 
+        'color':         `${theme.fg} !important`,
         'line-height':   'inherit !important'
+      },
+      'p': { 
+        'margin-bottom': '0.9em !important'
       },
     };
 

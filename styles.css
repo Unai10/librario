@@ -126,7 +126,9 @@ body {
   white-space: nowrap;
   user-select: none;
 }
-.btn-primary:hover  { background: #ddb97e; box-shadow: 0 4px 12px rgba(201,169,110,.3); }
+@media (hover: hover) {
+  .btn-primary:hover  { background: #ddb97e; box-shadow: 0 4px 12px rgba(201,169,110,.3); }
+}
 .btn-primary:active { transform: scale(0.97); }
 .btn-primary.large  { padding: var(--sp-3) var(--sp-6); font-size: 0.95rem; }
 .btn-primary svg    { width: 16px; height: 16px; flex-shrink: 0; }
@@ -146,7 +148,9 @@ body {
   cursor: pointer;
   transition: all var(--t-fast);
 }
-.btn-secondary:hover { background: var(--c-surface-2); color: var(--c-text); border-color: var(--c-gold-dim); }
+@media (hover: hover) {
+  .btn-secondary:hover { background: var(--c-surface-2); color: var(--c-text); border-color: var(--c-gold-dim); }
+}
 .btn-secondary svg   { width: 14px; height: 14px; flex-shrink: 0; }
 
 .btn-icon {
@@ -163,7 +167,9 @@ body {
   transition: all var(--t-fast);
   flex-shrink: 0;
 }
-.btn-icon:hover   { background: var(--c-surface-2); color: var(--c-text); }
+@media (hover: hover) {
+  .btn-icon:hover   { background: var(--c-surface-2); color: var(--c-text); }
+}
 .btn-icon:active  { transform: scale(0.93); }
 .btn-icon:disabled { opacity: 0.35; pointer-events: none; }
 .btn-icon svg     { width: 18px; height: 18px; }
@@ -330,7 +336,9 @@ body {
   cursor: pointer;
   transition: all var(--t-fast);
 }
-.sort-dropdown button:hover { background: var(--c-surface-2); color: var(--c-text); }
+@media (hover: hover) {
+  .sort-dropdown button:hover { background: var(--c-surface-2); color: var(--c-text); }
+}
 
 /* Grid de libros */
 .books-grid {
@@ -360,7 +368,9 @@ body {
   transition: transform var(--t-base), box-shadow var(--t-base), border-color var(--t-base);
   outline: none;
 }
-.book-card:hover   { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: var(--c-gold-dim); }
+@media (hover: hover) {
+  .book-card:hover   { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: var(--c-gold-dim); }
+}
 .book-card:focus-visible { box-shadow: 0 0 0 2px var(--c-gold); }
 
 .book-card__cover {
@@ -377,7 +387,9 @@ body {
   display: block;
   transition: transform 0.4s ease;
 }
-.book-card:hover .book-card__cover-img { transform: scale(1.04); }
+@media (hover: hover) {
+  .book-card:hover .book-card__cover-img { transform: scale(1.04); }
+}
 
 .book-card__cover-placeholder {
   width: 100%; height: 100%;
@@ -402,7 +414,9 @@ body {
   opacity: 0;
   transition: opacity var(--t-base);
 }
-.book-card:hover .book-card__overlay { opacity: 1; }
+@media (hover: hover) {
+  .book-card:hover .book-card__overlay { opacity: 1; }
+}
 
 .book-card__read-btn {
   font-size: 0.75rem;
@@ -486,9 +500,11 @@ body {
 .book-card__download { right: calc(var(--sp-2) + 34px); }
 
 .book-card__delete svg, .book-card__download svg { width: 13px; height: 13px; }
-.book-card:hover .book-card__delete, .book-card:hover .book-card__download { opacity: 1; }
-.book-card__delete:hover { background: var(--c-error); color: #fff; border-color: var(--c-error); }
-.book-card__download:hover { background: var(--c-success); color: #fff; border-color: var(--c-success); }
+@media (hover: hover) {
+  .book-card:hover .book-card__delete, .book-card:hover .book-card__download { opacity: 1; }
+  .book-card__delete:hover { background: var(--c-error); color: #fff; border-color: var(--c-error); }
+  .book-card__download:hover { background: var(--c-success); color: #fff; border-color: var(--c-success); }
+}
 
 /* Skeleton loading */
 .skeleton-grid {
@@ -596,7 +612,9 @@ body {
   transition: all var(--t-fast);
   white-space: nowrap;
 }
-.btn-edit:hover { background: var(--c-gold-glow); }
+@media (hover: hover) {
+  .btn-edit:hover { background: var(--c-gold-glow); }
+}
 .btn-edit svg   { width: 13px; height: 13px; }
 
 /* Área de lectura */
@@ -836,7 +854,9 @@ body {
   transition: all var(--t-fast);
   line-height: 1.4;
 }
-.toc-link:hover  { color: var(--c-text); background: var(--c-surface-2); }
+@media (hover: hover) {
+  .toc-link:hover  { color: var(--c-text); background: var(--c-surface-2); }
+}
 .toc-empty       { color: var(--c-text-faint); padding: var(--sp-4) var(--sp-5); font-size: 0.85rem; }
 
 /* Panel Settings */
@@ -901,7 +921,14 @@ body {
   text-align: left;
   transition: all var(--t-fast);
 }
-.font-btn:hover, .font-btn.active {
+@media (hover: hover) {
+  .font-btn:hover, .font-btn.active {
+    background: var(--c-gold-glow);
+    border-color: var(--c-gold-dim);
+    color: var(--c-gold);
+  }
+}
+.font-btn.active {
   background: var(--c-gold-glow);
   border-color: var(--c-gold-dim);
   color: var(--c-gold);
@@ -920,7 +947,9 @@ body {
   transition: border-color var(--t-fast);
 }
 .theme-btn.active { border-color: var(--c-gold); }
-.theme-btn:hover  { border-color: var(--c-gold-dim); }
+@media (hover: hover) {
+  .theme-btn:hover  { border-color: var(--c-gold-dim); }
+}
 
 .line-height-ctrl { display: flex; gap: var(--sp-2); }
 .lh-btn {
@@ -934,7 +963,14 @@ body {
   font-size: 0.85rem;
   transition: all var(--t-fast);
 }
-.lh-btn:hover, .lh-btn.active {
+@media (hover: hover) {
+  .lh-btn:hover, .lh-btn.active {
+    background: var(--c-gold-glow);
+    border-color: var(--c-gold-dim);
+    color: var(--c-gold);
+  }
+}
+.lh-btn.active {
   background: var(--c-gold-glow);
   border-color: var(--c-gold-dim);
   color: var(--c-gold);
@@ -953,7 +989,14 @@ body {
   font-size: 0.85rem;
   transition: all var(--t-fast);
 }
-.align-btn:hover, .align-btn.active {
+@media (hover: hover) {
+  .align-btn:hover, .align-btn.active {
+    background: var(--c-gold-glow);
+    border-color: var(--c-gold-dim);
+    color: var(--c-gold);
+  }
+}
+.align-btn.active {
   background: var(--c-gold-glow);
   border-color: var(--c-gold-dim);
   color: var(--c-gold);
@@ -1067,7 +1110,9 @@ body {
   padding: 0 var(--sp-2);
   white-space: nowrap;
 }
-.toolbar-btn:hover  { background: var(--c-surface-2); color: var(--c-text); }
+@media (hover: hover) {
+  .toolbar-btn:hover  { background: var(--c-surface-2); color: var(--c-text); }
+}
 .toolbar-btn:active { transform: scale(0.93); }
 
 .search-group { flex-wrap: wrap; gap: var(--sp-2); }
