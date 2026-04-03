@@ -60,71 +60,95 @@ class App {
   #root;
   #currentView = null;
   #currentRoute = null;
+  #currentParams = null;
 
   constructor() {
     this.#root = document.getElementById('app');
   }
 
   start() {
-    // Inicializar router basado en hash
-    window.addEventListener('hashchange', () => this.#handleRoute());
+    // Inicializar router basado en hash/state
+    window.addEventListener('popstate', () => this.#handleRoute());
     this.#handleRoute();
   }
 
   // ── Routing ──────────────────────────────────────────────────────────────
 
   #handleRoute() {
-    const hash   = window.location.hash.slice(1); // eliminar '#'
+    const hash = window.location.hash.slice(1); // eliminar '#'
     const [route, ...params] = hash.split('/');
 
+    let targetRoute = ROUTES.LIBRARY;
+    let targetParams = {};
+
     if (route === ROUTES.READER && params[0]) {
-      this.#navigate(ROUTES.READER, { bookId: params[0] });
+      targetRoute = ROUTES.READER;
+      targetParams = { bookId: params[0] };
     } else if (route === ROUTES.EDITOR && params[0]) {
       const chapterHref = decodeURIComponent(params.slice(1).join('/'));
-      this.#navigate(ROUTES.EDITOR, { bookId: params[0], chapterHref });
-    } else {
-      this.#navigate(ROUTES.LIBRARY);
+      targetRoute = ROUTES.EDITOR;
+      targetParams = { bookId: params[0], chapterHref };
     }
+
+    this.#navigate(targetRoute, targetParams);
   }
 
   async #navigate(route, params = {}) {
-    if (this.#currentRoute === route) return;
+    // Si la ruta y los parámetros principales (bookId) son iguales, es un cambio interno
+    const isSameView = this.#currentRoute === route && this.#currentParams?.bookId === params.bookId;
+    
+    // Si es exactamente la misma ruta y params (incluyendo capítulo), no hacemos nada
+    if (isSameView && this.#currentParams?.chapterHref === params.chapterHref) return;
 
-    // Desmontar vista actual
-    if (this.#currentView?.unmount) {
+    // Desmontar vista actual si cambiamos de tipo de vista
+    if (this.#currentView?.unmount && this.#currentRoute !== route) {
       await this.#currentView.unmount();
+      this.#currentView = null;
     }
 
     this.#currentRoute = route;
+    this.#currentParams = { ...params };
     this.#root.className = `view-${route}`;
 
-    // Añadir clase de transición
-    this.#root.classList.add('view-entering');
-    requestAnimationFrame(() => this.#root.classList.remove('view-entering'));
+    // Animación solo si cambiamos de vista principal
+    if (!isSameView) {
+      this.#root.classList.add('view-entering');
+      requestAnimationFrame(() => this.#root.classList.remove('view-entering'));
+    }
 
     try {
       switch (route) {
         case ROUTES.LIBRARY:
-          this.#currentView = new LibraryView(this.#root, {
-            onBookOpen: (bookId) => this.#goToReader(bookId),
-          });
-          await this.#currentView.mount();
+          if (!this.#currentView) {
+            this.#currentView = new LibraryView(this.#root, {
+              onBookOpen: (bookId) => this.#goToReader(bookId),
+            });
+            await this.#currentView.mount();
+          }
           break;
 
         case ROUTES.READER:
-          this.#currentView = new ReaderView(this.#root, {
-            onBack: () => this.#goToLibrary(),
-            onEdit: (bookId, chapterHref) => this.#goToEditor(bookId, chapterHref),
-          });
-          await this.#currentView.mount(params.bookId);
+          if (!this.#currentView) {
+            this.#currentView = new ReaderView(this.#root, {
+              onBack: () => this.#goToLibrary(),
+              onEdit: (bookId, chapterHref) => this.#goToEditor(bookId, chapterHref),
+            });
+            await this.#currentView.mount(params.bookId);
+          }
           break;
 
         case ROUTES.EDITOR:
-          this.#currentView = new EditorView(this.#root, {
-            onBack:         () => this.#goToReader(params.bookId),
-            onReadChapter:  () => this.#goToReader(params.bookId),
-          });
-          await this.#currentView.mount(params.bookId, params.chapterHref);
+          if (!this.#currentView) {
+            this.#currentView = new EditorView(this.#root, {
+              onBack:         () => this.#goToReader(params.bookId),
+              onReadChapter:  () => this.#goToReader(params.bookId),
+            });
+            await this.#currentView.mount(params.bookId, params.chapterHref);
+          } else if (isSameView) {
+            // Si ya estamos en el editor y solo cambia el capítulo, notificamos a la vista
+            // (Asumiendo que mount puede manejar recargas o implementando un método update)
+            await this.#currentView.mount(params.bookId, params.chapterHref);
+          }
           break;
 
         default:
@@ -132,26 +156,52 @@ class App {
       }
     } catch (err) {
       console.error('[App] Navigation error:', err);
-      alert(`Error de navegación: ${err.message}`);
-      // Fallback a la biblioteca si algo falla catastróficamente
+      // Fallback a la biblioteca
       if (route !== ROUTES.LIBRARY) this.#goToLibrary();
     }
   }
 
-  // ── Navegación pública ───────────────────────────────────────────────────
+  // ── Navegación con gestión de historial ──────────────────────────────────
+
+  #updateHash(newHash, replace = false) {
+    if (replace) {
+      history.replaceState(null, '', `#${newHash}`);
+    } else {
+      location.hash = newHash;
+    }
+  }
 
   #goToLibrary() {
-    window.location.hash = '';
-    this.#navigate(ROUTES.LIBRARY);
+    // Si estamos en Reader, volver atrás en el historial es mejor para Android
+    if (this.#currentRoute === ROUTES.READER) {
+      history.back();
+    } else {
+      this.#updateHash('', true);
+      this.#handleRoute();
+    }
   }
 
   #goToReader(bookId) {
-    window.location.hash = `${ROUTES.READER}/${bookId}`;
+    const newHash = `${ROUTES.READER}/${bookId}`;
+    // Si venimos del Editor, volvemos atrás
+    if (this.#currentRoute === ROUTES.EDITOR) {
+      history.back();
+    } else {
+      this.#updateHash(newHash);
+    }
   }
 
   #goToEditor(bookId, chapterHref) {
     const enc = chapterHref ? `/${encodeURIComponent(chapterHref)}` : '';
-    window.location.hash = `${ROUTES.EDITOR}/${bookId}${enc}`;
+    const newHash = `${ROUTES.EDITOR}/${bookId}${enc}`;
+    
+    // Si ya estamos en Editor y cambiamos de capítulo, usamos replaceState
+    if (this.#currentRoute === ROUTES.EDITOR) {
+      this.#updateHash(newHash, true);
+      this.#handleRoute();
+    } else {
+      this.#updateHash(newHash);
+    }
   }
 }
 
