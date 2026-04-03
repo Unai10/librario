@@ -44,6 +44,8 @@ export class ReaderView {
   #saveTimer = null;
   #currentCfi = null;
   #currentChapterHref = null;
+  #currentPercentage = 0;
+  #locationsGenerated = false;
 
   constructor(container, { onBack, onEdit }) {
     this.#container = container;
@@ -296,6 +298,8 @@ export class ReaderView {
       // Cargar progreso guardado
       const progress = await db.get(STORES.PROGRESS, this.#bookId);
       const startCfi = progress?.cfi || null;
+      this.#currentPercentage = progress?.percentage || 0;
+      this.#locationsGenerated = false;
 
       try {
         if (startCfi) {
@@ -319,7 +323,14 @@ export class ReaderView {
 
       // Generar localizaciones para el progreso (segundo plano)
       this.#book.ready.then(() => {
-        this.#book.locations.generate(1024).catch(() => {});
+        this.#book.locations.generate(1024).then(() => {
+          this.#locationsGenerated = true;
+          // Forzar actualización de progreso una vez generadas las localizaciones
+          if (this.#currentCfi) {
+            const loc = this.#rendition.currentLocation();
+            if (loc) this.#updateProgress(loc);
+          }
+        }).catch(() => {});
       });
 
       // Eventos del rendition
@@ -461,7 +472,15 @@ export class ReaderView {
   // ── Progreso ─────────────────────────────────────────────────────────────
 
   #updateProgress(location) {
-    const pct  = this.#book.locations.percentageFromCfi(location.start.cfi) * 100;
+    let pct = this.#currentPercentage || 0;
+    if (this.#locationsGenerated) {
+      const calculatedPct = this.#book.locations.percentageFromCfi(location.start.cfi);
+      if (calculatedPct !== null && calculatedPct >= 0) {
+        pct = calculatedPct * 100;
+        this.#currentPercentage = pct;
+      }
+    }
+
     const fill = this.#container.querySelector('#progressFill');
     const pctLabel  = this.#container.querySelector('#progressLabel');
     const locLabel  = this.#container.querySelector('#locationLabel');
@@ -499,7 +518,14 @@ export class ReaderView {
 
   async #saveProgress() {
     if (!this.#currentCfi) return;
-    const pct = this.#book?.locations?.percentageFromCfi(this.#currentCfi) * 100 || 0;
+    
+    let pct = this.#currentPercentage || 0;
+    if (this.#locationsGenerated) {
+      const calculatedPct = this.#book?.locations?.percentageFromCfi(this.#currentCfi);
+      if (calculatedPct !== null && calculatedPct !== undefined && calculatedPct >= 0) {
+        pct = calculatedPct * 100;
+      }
+    }
 
     await db.put(STORES.PROGRESS, {
       bookId:     this.#bookId,
