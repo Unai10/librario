@@ -12,61 +12,63 @@ import { EditorView   } from './editor.js';
 async function registerSW() {
   if (!('serviceWorker' in navigator)) return;
 
-  // 1. Escuchar cambios de controlador (cuando un nuevo SW toma el mando)
-  let refreshing = false;
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (refreshing) return;
-    refreshing = true;
-    window.location.reload();
-  });
-
   try {
     const reg = await navigator.serviceWorker.register('./sw.js', { scope: './' });
 
-    // Comprobar actualización al cargar y cada vez que la pestaña gane foco
-    const checkUpdate = () => {
-      reg.update().catch(err => console.warn('[App] Error actualizando SW:', err));
-    };
-
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') checkUpdate();
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
     });
 
+    const notifyUpdate = (worker) => {
+      const existing = document.querySelector('.update-banner');
+      if (existing) return;
+
+      const banner = document.createElement('div');
+      banner.className = 'update-banner';
+      banner.innerHTML = `
+        <span>Actualización disponible</span>
+        <button id="reloadBtn">Actualizar</button>
+      `;
+      document.body.appendChild(banner);
+
+      banner.querySelector('#reloadBtn').addEventListener('click', () => {
+        banner.style.display = 'none'; // Ocultar inmediatamente por UX
+        try {
+          worker.postMessage({ type: 'SKIP_WAITING' });
+        } catch (e) {
+          // Fallback si falla el postMessage
+          window.location.reload();
+        }
+      });
+    };
+
     // Si ya hay un worker esperando
-    if (reg.waiting) {
-      showUpdateBanner(reg.waiting);
-    }
+    if (reg.waiting) notifyUpdate(reg.waiting);
 
     // Escuchar futuras actualizaciones
     reg.addEventListener('updatefound', () => {
       const newSW = reg.installing;
-      newSW?.addEventListener('statechange', () => {
+      if (!newSW) return;
+      newSW.addEventListener('statechange', () => {
         if (newSW.state === 'installed' && navigator.serviceWorker.controller) {
-          showUpdateBanner(newSW);
+          notifyUpdate(newSW);
         }
       });
+    });
+
+    // Comprobar actualización cuando la app vuelve a primer plano
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        reg.update().catch(() => {});
+      }
     });
 
   } catch (err) {
     console.warn('[App] Error registrando SW:', err);
   }
-}
-
-function showUpdateBanner(worker) {
-  if (document.querySelector('.update-banner')) return;
-
-  const banner = document.createElement('div');
-  banner.className = 'update-banner';
-  banner.innerHTML = `
-    <span>Actualización disponible</span>
-    <button id="reloadBtn">Actualizar</button>
-  `;
-  document.body.appendChild(banner);
-
-  banner.querySelector('#reloadBtn').addEventListener('click', () => {
-    banner.remove();
-    worker.postMessage({ type: 'SKIP_WAITING' });
-  });
 }
 
 // ─── Router ────────────────────────────────────────────────────────────────

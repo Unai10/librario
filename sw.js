@@ -3,7 +3,7 @@
  * Estrategia: Cache-first para assets estáticos, Network-first para recursos externos
  */
 
-const CACHE_VERSION = 'v1.1.6';
+const CACHE_VERSION = 'v1.1.7';
 const CACHE_STATIC = `librario-static-${CACHE_VERSION}`;
 const CACHE_CDN    = `librario-cdn-${CACHE_VERSION}`;
 
@@ -27,7 +27,14 @@ const STATIC_ASSETS = [
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_STATIC)
-      .then(cache => cache.addAll(STATIC_ASSETS))
+      .then(cache => {
+        // Usar fetch individual para forzar no-cache en red, previniendo
+        // que el navegador use una versión antigua del HTTP cache.
+        const requests = STATIC_ASSETS.map(url => {
+          return new Request(url, { cache: 'no-cache' });
+        });
+        return cache.addAll(requests);
+      })
   );
 });
 
