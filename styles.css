@@ -951,57 +951,6 @@ body {
   .theme-btn:hover  { border-color: var(--c-gold-dim); }
 }
 
-.line-height-ctrl { display: flex; gap: var(--sp-2); }
-.lh-btn {
-  flex: 1;
-  background: transparent;
-  border: 1px solid var(--c-border);
-  color: var(--c-text-muted);
-  padding: var(--sp-2);
-  border-radius: var(--r-sm);
-  cursor: pointer;
-  font-size: 0.85rem;
-  transition: all var(--t-fast);
-}
-@media (hover: hover) {
-  .lh-btn:hover, .lh-btn.active {
-    background: var(--c-gold-glow);
-    border-color: var(--c-gold-dim);
-    color: var(--c-gold);
-  }
-}
-.lh-btn.active {
-  background: var(--c-gold-glow);
-  border-color: var(--c-gold-dim);
-  color: var(--c-gold);
-}
-
-.align-ctrl { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
-.align-btn {
-  flex: 1;
-  min-width: 80px;
-  background: transparent;
-  border: 1px solid var(--c-border);
-  color: var(--c-text-muted);
-  padding: var(--sp-2);
-  border-radius: var(--r-sm);
-  cursor: pointer;
-  font-size: 0.85rem;
-  transition: all var(--t-fast);
-}
-@media (hover: hover) {
-  .align-btn:hover, .align-btn.active {
-    background: var(--c-gold-glow);
-    border-color: var(--c-gold-dim);
-    color: var(--c-gold);
-  }
-}
-.align-btn.active {
-  background: var(--c-gold-glow);
-  border-color: var(--c-gold-dim);
-  color: var(--c-gold);
-}
-
 /* ═══════════════════════════════════════════════════════════════════
    EDITOR
    ═══════════════════════════════════════════════════════════════════ */

@@ -22,13 +22,6 @@ const FONTS = [
   { id: 'sans',      label: 'Sans-serif',   css: "'Lato', sans-serif" },
 ];
 
-const ALIGNMENTS = [
-  { id: 'original', label: 'Original' },
-  { id: 'justify',  label: 'Justificado' },
-  { id: 'left',     label: 'Izquierda' },
-  { id: 'right',    label: 'Derecha' },
-];
-
 // ─── ReaderView ────────────────────────────────────────────────────────────
 
 export class ReaderView {
@@ -40,7 +33,7 @@ export class ReaderView {
   #rendition;     // epub.js Rendition
   #bookData;      // record de IndexedDB
   #toc = [];
-  #settings = { fontSize: 18, fontId: 'georgia', theme: 'dark', lineHeight: 1.7, textAlign: 'original' };
+  #settings = { fontSize: 18, fontId: 'georgia', theme: 'dark' };
   #saveTimer = null;
   #currentCfi = null;
   #currentChapterHref = null;
@@ -216,25 +209,6 @@ export class ReaderView {
               `).join('')}
             </div>
           </section>
-
-          <section class="settings-section">
-            <label class="settings-label">Alineación de texto</label>
-            <div class="align-ctrl" id="alignSelector">
-              ${ALIGNMENTS.map(a => `
-                <button class="align-btn ${a.id === this.#settings.textAlign ? 'active' : ''}"
-                        data-align="${a.id}">${a.label}</button>
-              `).join('')}
-            </div>
-          </section>
-
-          <section class="settings-section">
-            <label class="settings-label">Interlineado</label>
-            <div class="line-height-ctrl">
-              ${[1.4, 1.7, 2.0, 2.3].map(v => `
-                <button class="lh-btn ${v === this.#settings.lineHeight ? 'active' : ''}" data-lh="${v}">${v}</button>
-              `).join('')}
-            </div>
-          </section>
         </div>
 
         <!-- Overlay para cerrar paneles -->
@@ -393,31 +367,16 @@ export class ReaderView {
         'color':            `${theme.fg} !important`,
         'font-family':      `${font.css} !important`,
         'font-size':        `${this.#settings.fontSize}px !important`,
-        'line-height':      `${this.#settings.lineHeight} !important`,
         'max-width':        '800px !important',
         'margin':           '0 auto !important',
         'padding':          '2rem 2rem 8rem !important',
       },
-      'a': { 'color': `${theme.link} !important` },
-      'p, div, span, li, h1, h2, h3, h4, h5, h6': { 
-        'color':         `${theme.fg} !important`,
-        'line-height':   'inherit !important'
-      },
-      'p': { 
-        'margin-bottom': '0.9em !important'
-      },
+      'p, div, span, li, h1, h2, h3, h4, h5, h6': {
+        'color':         `${theme.fg} !important`
+      }
     };
 
-    // Aplicar alineación explícitamente a body y p para mayor especificidad
-    const alignValue = this.#settings.textAlign === 'original' 
-      ? 'initial' 
-      : this.#settings.textAlign;
-
-    styles.body['text-align'] = `${alignValue} !important`;
-    styles['p']['text-align']  = `${alignValue} !important`;
-
     this.#rendition.themes.default(styles);
-
     // Actualizar tema del root
     const root = this.#container.querySelector('#readerRoot');
     if (root) {
@@ -585,16 +544,6 @@ export class ReaderView {
       btn.addEventListener('click', () => this.#changeTheme(btn.dataset.theme));
     });
 
-    // Line height
-    q('.line-height-ctrl')?.querySelectorAll('.lh-btn').forEach(btn => {
-      btn.addEventListener('click', () => this.#changeLineHeight(parseFloat(btn.dataset.lh)));
-    });
-
-    // Alignment
-    q('#alignSelector')?.querySelectorAll('.align-btn').forEach(btn => {
-      btn.addEventListener('click', () => this.#changeTextAlign(btn.dataset.align));
-    });
-
     // Teclado
     document.addEventListener('keydown', this.#handleKey);
   }
@@ -640,24 +589,6 @@ export class ReaderView {
     this.#settings.theme = theme;
     this.#container.querySelectorAll('.theme-btn').forEach(b => {
       b.classList.toggle('active', b.dataset.theme === theme);
-    });
-    this.#applyTheme();
-    this.#saveSettings();
-  }
-
-  #changeLineHeight(lh) {
-    this.#settings.lineHeight = lh;
-    this.#container.querySelectorAll('.lh-btn').forEach(b => {
-      b.classList.toggle('active', parseFloat(b.dataset.lh) === lh);
-    });
-    this.#applyTheme();
-    this.#saveSettings();
-  }
-
-  #changeTextAlign(align) {
-    this.#settings.textAlign = align;
-    this.#container.querySelectorAll('.align-btn').forEach(b => {
-      b.classList.toggle('active', b.dataset.align === align);
     });
     this.#applyTheme();
     this.#saveSettings();
